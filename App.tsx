@@ -1,12 +1,11 @@
-
-import React,{ useCallback,useEffect,useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { VirtualTimeProvider } from './context/VirtualTimeContext';
 import { OSProvider } from './context/OSContext';
 import PhoneShell from './components/PhoneShell';
 import FeaturePreviewPage from './components/FeaturePreviewPage';
-import { startKeepAlive,startBackendHeartbeat } from './utils/keepAlive';
+import { startKeepAlive, startBackendHeartbeat } from './utils/keepAlive';
 import { installGlobalAutofillSuppression } from './utils/autofillSuppression';
-import { isFullscreenEnabled,requestSystemFullscreenForMobileRestore } from './utils/systemFullscreen';
+import { isFullscreenEnabled, requestSystemFullscreenForMobileRestore } from './utils/systemFullscreen';
 import { isIOSStandaloneWebApp } from './utils/iosStandalone';
 
 const EDITABLE_SELECTION_SELECTOR = 'input:not([readonly]), textarea:not([readonly]), select, [contenteditable="true"], [data-allow-text-selection="true"]';
@@ -40,84 +39,47 @@ function isFeaturePreviewRoute(): boolean {
 
 const SullyOSApp: React.FC = () => {
   useEffect(() => {
+    // 1. 启动保活和后端心跳
+    startKeepAlive();
+    startBackendHeartbeat();
+
+    // 2. 安装全局自动填充抑制
     const uninstallAutofillSuppression = installGlobalAutofillSuppression();
 
+    // 3. 禁止非编辑区域的文本选择
     const preventNonEditableSelection = (event: Event) => {
       if (!canSelectText(event.target)) {
         event.preventDefault();
       }
     };
-
     document.addEventListener('selectstart', preventNonEditableSelection);
 
+    // 4. 全屏逻辑（仅 PWA 模式且启用全屏时生效）
+    let ensureFullscreen: (() => void) | null = null;
+    if (isPwaMode() && isFullscreenEnabled()) {
+      ensureFullscreen = () => {
+        requestSystemFullscreenForMobileRestore();
+      };
+      document.addEventListener('click', ensureFullscreen, { capture: true, passive: true });
+      document.addEventListener('touchstart', ensureFullscreen, { capture: true, passive: true });
+    }
+
+    // 统一清理函数
     return () => {
       uninstallAutofillSuppression();
       document.removeEventListener('selectstart', preventNonEditableSelection);
+      
+      if (ensureFullscreen) {
+        document.removeEventListener('click', ensureFullscreen, { capture: true } as any);
+        document.removeEventListener('touchstart', ensureFullscreen, { capture: true } as any);
+      }
     };
   }, []);
 
+  // iOS 独立模式适配
   const useIOSStandaloneShell =
     typeof window !== 'undefined' && isIOSStandaloneWebApp();
 
-  return (
-    <div
-      className="fixed inset-0 sully-app-root w-full bg-transparent overflow-hidden"
-      style={
-        useIOSStandaloneShell
-          ? { height: '100lvh', minHeight: '100lvh' }
-          : undefined
-      }
-    >
-      <VirtualTimeProvider>
-        <OSProvider>
-          <PhoneShell />
-        </OSProvider>
-      </VirtualTimeProvider>
-    </div>
-  );
-};
-
-  document.addEventListener('selectstart', preventNonEditableSelection);
-
-  return () => {
-    uninstallAutofillSuppression();
-    document.removeEventListener('selectstart', preventNonEditableSelection);
-  };
-}, []);
-
-    const preventNonEditableSelection = (event: Event) => {
-      if (!canSelectText(event.target)) {
-        event.preventDefault();
-      }
-    };
-
-    document.addEventListener('selectstart', preventNonEditableSelection);
-
-    if (isPwaMode() && isFullscreenEnabled()) {
-      // 积极维护全屏状态，但避免在移动端每次 touch/click 都打 fullscreen API。
-      // Android 侧滑返回、键盘收起后仍会恢复，只是 2.5 秒内最多尝试一次。
-      const ensureFullscreen = () => {
-        requestSystemFullscreenForMobileRestore();
-      };
-
-      document.addEventListener('click', ensureFullscreen, { capture: true, passive: true });
-      document.addEventListener('touchstart', ensureFullscreen, { capture: true, passive: true });
-
-      return () => {
-        uninstallAutofillSuppression();
-        document.removeEventListener('selectstart', preventNonEditableSelection);
-        document.removeEventListener('click', ensureFullscreen, { capture: true } as any);
-        document.removeEventListener('touchstart', ensureFullscreen, { capture: true } as any);
-      };
-    }
-
-    return () => {
-      uninstallAutofillSuppression();
-      document.removeEventListener('selectstart', preventNonEditableSelection);
-    };
-  }, []);
-
-  const useIOSStandaloneShell = typeof window !== 'undefined' && isIOSStandaloneWebApp();
   const shellClassName = 'fixed inset-0 sully-app-root w-full bg-transparent overflow-hidden';
   const shellStyle: React.CSSProperties | undefined = useIOSStandaloneShell
     ? { height: 'var(--app-height, 100lvh)', minHeight: 'var(--app-height, 100lvh)' }
@@ -139,34 +101,4 @@ const SullyOSApp: React.FC = () => {
   );
 };
 
-const App: React.FC = () => {
-  const [isPreviewRoute, setIsPreviewRoute] = useState(isFeaturePreviewRoute);
-
-  useEffect(() => {
-    const syncPreviewRoute = () => setIsPreviewRoute(isFeaturePreviewRoute());
-
-    window.addEventListener('hashchange', syncPreviewRoute);
-    window.addEventListener('popstate', syncPreviewRoute);
-
-    return () => {
-      window.removeEventListener('hashchange', syncPreviewRoute);
-      window.removeEventListener('popstate', syncPreviewRoute);
-    };
-  }, []);
-
-  const enterMainApp = useCallback(() => {
-    const nextUrl = new URL(window.location.href);
-    nextUrl.hash = '';
-    nextUrl.searchParams.delete('preview');
-    window.history.pushState({}, '', `${nextUrl.pathname}${nextUrl.search}`);
-    setIsPreviewRoute(false);
-  }, []);
-
-  if (isPreviewRoute) {
-    return <FeaturePreviewPage onEnterApp={enterMainApp} />;
-  }
-
-  return <SullyOSApp />;
-};
-
-export default App;
+export default SullyOSApp;
