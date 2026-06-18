@@ -39,10 +39,26 @@ function isFeaturePreviewRoute(): boolean {
 }
 
 const SullyOSApp: React.FC = () => {
-  useEffect(() => {
-    startKeepAlive();
-    startBackendHeartbeat();
-    const uninstallAutofillSuppression = installGlobalAutofillSuppression();
+ useEffect(() => {
+  // APK safe mode：关闭所有后台请求
+  // startKeepAlive();
+  // startBackendHeartbeat();
+
+  const uninstallAutofillSuppression = installGlobalAutofillSuppression();
+
+  const preventNonEditableSelection = (event: Event) => {
+    if (!canSelectText(event.target)) {
+      event.preventDefault();
+    }
+  };
+
+  document.addEventListener('selectstart', preventNonEditableSelection);
+
+  return () => {
+    uninstallAutofillSuppression();
+    document.removeEventListener('selectstart', preventNonEditableSelection);
+  };
+}, []);
 
     const preventNonEditableSelection = (event: Event) => {
       if (!canSelectText(event.target)) {
