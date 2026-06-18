@@ -39,18 +39,43 @@ function isFeaturePreviewRoute(): boolean {
 }
 
 const SullyOSApp: React.FC = () => {
- useEffect(() => {
-  // APK safe mode：关闭所有后台请求
-  // startKeepAlive();
-  // startBackendHeartbeat();
+  useEffect(() => {
+    const uninstallAutofillSuppression = installGlobalAutofillSuppression();
 
-  const uninstallAutofillSuppression = installGlobalAutofillSuppression();
+    const preventNonEditableSelection = (event: Event) => {
+      if (!canSelectText(event.target)) {
+        event.preventDefault();
+      }
+    };
 
-  const preventNonEditableSelection = (event: Event) => {
-    if (!canSelectText(event.target)) {
-      event.preventDefault();
-    }
-  };
+    document.addEventListener('selectstart', preventNonEditableSelection);
+
+    return () => {
+      uninstallAutofillSuppression();
+      document.removeEventListener('selectstart', preventNonEditableSelection);
+    };
+  }, []);
+
+  const useIOSStandaloneShell =
+    typeof window !== 'undefined' && isIOSStandaloneWebApp();
+
+  return (
+    <div
+      className="fixed inset-0 sully-app-root w-full bg-transparent overflow-hidden"
+      style={
+        useIOSStandaloneShell
+          ? { height: '100lvh', minHeight: '100lvh' }
+          : undefined
+      }
+    >
+      <VirtualTimeProvider>
+        <OSProvider>
+          <PhoneShell />
+        </OSProvider>
+      </VirtualTimeProvider>
+    </div>
+  );
+};
 
   document.addEventListener('selectstart', preventNonEditableSelection);
 
