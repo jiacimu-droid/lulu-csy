@@ -8,7 +8,7 @@ import { initAppLifecycle } from './utils/appLifecycle';
 import { preloadLocalAssets, scheduleIdlePreload } from './utils/preloadResources';
 import { installIOSStandaloneWorkaround } from './utils/iosStandalone';
 import { installViewportRepair } from './utils/viewportRepair';
-import { startRuntimeHealthProbe } from './utils/runtimeHealthProbe';
+//import { startRuntimeHealthProbe } from './utils/runtimeHealthProbe';
 import {
   captureCollectionWallDebugConsoleArgs,
   installCollectionWallDebugConsoleCapture,
