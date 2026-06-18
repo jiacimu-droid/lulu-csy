@@ -49,23 +49,24 @@ if (!import.meta.env.DEV) {
 // 🧠 INIT（关键：我帮你加了保护，不会卡死）
 // =====================
 
-step("1 interceptor");
-try { initSystemInterceptor(); } catch (e) { console.error("interceptor fail", e); }
+// step("1 interceptor");
+// try { initSystemInterceptor(); } catch (e) { console.error("interceptor fail", e); }
 
-step("2 lifecycle");
-try { initAppLifecycle(); } catch (e) { console.error("lifecycle fail", e); }
+// step("2 lifecycle");
+// try { initAppLifecycle(); } catch (e) { console.error("lifecycle fail", e); }
 
-step("3 ios fix");
-try { installIOSStandaloneWorkaround(); } catch (e) { console.error(e); }
+// step("3 ios fix");
+// try { installIOSStandaloneWorkaround(); } catch (e) { console.error(e); }
 
-step("4 viewport fix");
-try { installViewportRepair(); } catch (e) { console.error(e); }
+// step("4 viewport fix");
+// try { installViewportRepair(); } catch (e) { console.error(e); }
 
-step("5 health probe");
-try { startRuntimeHealthProbe(); } catch (e) { console.error(e); }
+// step("5 health probe");
+// try { startRuntimeHealthProbe(); } catch (e) { console.error(e); }
 
-step("6 preload");
-try { preloadLocalAssets(); scheduleIdlePreload(); } catch (e) { console.error(e); }
+// step("6 preload");
+// try { preloadLocalAssets(); scheduleIdlePreload(); } catch (e) { console.error(e); }
+
 
 console.log("🚧 INIT DONE");
 
