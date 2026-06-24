@@ -1,4 +1,3 @@
-
 import React,{ useState,useEffect,useRef } from 'react';
 import { useOS } from '../context/OSContext';
 import { DB } from '../utils/db';
@@ -62,6 +61,18 @@ const GAME_THEMES: Record<GameTheme, { bg: string, text: string, accent: string,
         optionNormal: 'bg-white border-slate-200 text-slate-600',
         optionChaotic: 'bg-yellow-50 border-yellow-200 text-yellow-700',
         optionEvil: 'bg-red-50 border-red-200 text-red-700'
+    },
+    apocalypse: {
+        bg: 'bg-[#14120e]',
+        text: 'text-[#c8c0b4]',
+        accent: 'text-[#d97706]',
+        font: 'font-sans',
+        border: 'border-[#574c3d]',
+        cardBg: 'bg-[#1e1a14]',
+        gradient: 'from-[#29241c] to-[#14120e]',
+        optionNormal: 'bg-[#29241c] border-[#574c3d] text-[#c8c0b4]',
+        optionChaotic: 'bg-[#4a3f2e] border-[#d97706] text-[#fbbf24]',
+        optionEvil: 'bg-[#3f1a0f] border-[#9c4221] text-[#fca5a5]'
     }
 };
 
@@ -403,6 +414,8 @@ const GameApp: React.FC = () => {
 
     // UI Toggles
     const [showSystemMenu, setShowSystemMenu] = useState(false);
+    const [showWorldEditModal, setShowWorldEditModal] = useState(false);
+    const [editWorldText, setEditWorldText] = useState('');
     const [isArchiving, setIsArchiving] = useState(false);
     const [showTools, setShowTools] = useState(false); // Default hidden
     const [showParty, setShowParty] = useState(true);  // Default visible
@@ -550,10 +563,10 @@ const GameApp: React.FC = () => {
 ${recentLog}
 
 【GM强制指令 (Meta Instruction)】: 
-1. **打破第四面墙**: 允许角色表现出“正在和用户一起玩游戏”的意识。
+1. **打破第四面墙**: 允许角色表现出"正在和用户一起玩游戏"的意识。
 2. **关系继承**: 
-   - 如果状态是"Hot"，跑团时要更有默契，可以吐槽“刚才私聊时你不是这么说的”。
-   - 如果状态是"Cold"，跑团时可以表现得生疏、傲娇或抱怨“好久不见怎么突然拉我来冒险”。
+   - 如果状态是"Hot"，跑团时要更有默契，可以吐槽"刚才私聊时你不是这么说的"。
+   - 如果状态是"Cold"，跑团时可以表现得生疏、傲娇或抱怨"好久不见怎么突然拉我来冒险"。
    - **绝对禁止**像陌生人一样对待玩家。你们是老相识。
 =====================================\n`;
                 } else {
@@ -728,6 +741,31 @@ ${playerContext}
         setActiveGame(updated);
         setGames(prev => prev.map(game => game.id === updated.id ? updated : game));
         await DB.saveGame(updated);
+    };
+
+    // --- World Setting Edit ---
+    const openWorldEdit = () => {
+        if (!activeGame) return;
+        setEditWorldText(activeGame.worldSetting);
+        setShowWorldEditModal(true);
+        setShowSystemMenu(false);
+    };
+
+    const saveWorldEdit = async () => {
+        if (!activeGame || !editWorldText.trim()) {
+            addToast('世界观设定不能为空', 'error');
+            return;
+        }
+        const updated: GameSession = {
+            ...activeGame,
+            worldSetting: editWorldText.trim(),
+            lastPlayedAt: Date.now()
+        };
+        setActiveGame(updated);
+        setGames(prev => prev.map(game => game.id === updated.id ? updated : game));
+        await DB.saveGame(updated);
+        setShowWorldEditModal(false);
+        addToast('世界观设定已更新', 'success');
     };
 
     const summarizeGameChunk = async (game: GameSession, startRound: number, endRound: number): Promise<GameSummaryChunk> => {
@@ -911,7 +949,7 @@ ${writingStylePrompt ? `\n### ✒️ 文风控制\n${writingStylePrompt}\n` : ''
 1. **全员「入戏」 (Roleplay First)**: 
    - 队友们是活生生的冒险者，但同时也带着私聊时的记忆和情感。
    - **拒绝机械感**: 他们应该主动观察环境、吐槽现状、互相开玩笑。
-   - **私聊影响 (关键)**: 请根据【神经链接】中的“关系温度”和“最近话题”来调整每个角色的反应。
+   - **私聊影响 (关键)**: 请根据【神经链接】中的"关系温度"和"最近话题"来调整每个角色的反应。
    - **队内互动**: 队友之间也可以有互动（比如A吐槽B的计划）。
 
 2. **硬核 GM 风格**: 
@@ -1283,9 +1321,15 @@ Output: A concise but complete Chinese final summary in 1-3 sentences. Include k
                     <div>
                         <label className="text-xs font-bold text-slate-400 uppercase block mb-2">画风主题</label>
                         <div className="flex gap-2 flex-wrap">
-                            {(['fantasy', 'cyber', 'horror', 'modern'] as GameTheme[]).map(t => (
-                                <button key={t} onClick={() => setNewTheme(t)} className={`px-4 py-2 rounded-xl text-xs font-bold capitalize border transition-all active:scale-95 ${newTheme === t ? 'bg-orange-500 text-white border-orange-500 shadow-md' : 'bg-white text-slate-500 border-slate-200'}`}>{t}</button>
-                            ))}
+                            {(['fantasy', 'cyber', 'horror', 'modern', 'apocalypse'] as GameTheme[]).map(t => {
+                                const labels: Record<GameTheme, string> = {
+                                    fantasy: '奇幻', cyber: '赛博', horror: '恐怖',
+                                    modern: '现代', apocalypse: '末世'
+                                };
+                                return (
+                                    <button key={t} onClick={() => setNewTheme(t)} className={`px-4 py-2 rounded-xl text-xs font-bold capitalize border transition-all active:scale-95 ${newTheme === t ? 'bg-orange-500 text-white border-orange-500 shadow-md' : 'bg-white text-slate-500 border-slate-200'}`}>{labels[t] || t}</button>
+                                );
+                            })}
                         </div>
                     </div>
                     <div>
@@ -1647,6 +1691,11 @@ Output: A concise but complete Chinese final summary in 1-3 sentences. Include k
                         </div>
                     </div>
 
+                    {/* World Setting Edit */}
+                    <button onClick={openWorldEdit} className="w-full py-3 bg-indigo-500 text-white font-bold rounded-2xl shadow-lg flex items-center justify-center gap-2">
+                        <span>🌍</span> 编辑世界观设定
+                    </button>
+
                     <button onClick={handleArchiveAndQuit} className="w-full py-3 bg-emerald-500 text-white font-bold rounded-2xl shadow-lg flex items-center justify-center gap-2">
                         <span>💾</span> 归档记忆并退出
                     </button>
@@ -1659,6 +1708,39 @@ Output: A concise but complete Chinese final summary in 1-3 sentences. Include k
                     <button onClick={handleLeave} className="w-full py-3 bg-slate-100 text-slate-600 font-bold rounded-2xl flex items-center justify-center gap-2">
                         <span>🚪</span> 暂时离开 (不归档)
                     </button>
+                </div>
+            </Modal>
+
+            {/* World Edit Modal */}
+            <Modal isOpen={showWorldEditModal} title="编辑世界观设定" onClose={() => setShowWorldEditModal(false)}>
+                <div className="space-y-4">
+                    <div>
+                        <label className="text-xs font-bold text-slate-400 uppercase block mb-2">当前世界观</label>
+                        <textarea
+                            value={editWorldText}
+                            onChange={e => setEditWorldText(e.target.value)}
+                            className="w-full h-40 bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-orange-500 outline-none resize-none transition-colors"
+                            placeholder="输入新的世界观设定..."
+                        />
+                    </div>
+                    <p className="text-[10px] text-slate-400">
+                        修改世界观后，新的设定会在下一轮 GM 推演时生效。不会改变已有的剧情记录。
+                    </p>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => setShowWorldEditModal(false)}
+                            className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-2xl transition-all active:scale-95"
+                        >
+                            取消
+                        </button>
+                        <button
+                            onClick={saveWorldEdit}
+                            disabled={!editWorldText.trim()}
+                            className="flex-1 py-3 bg-orange-500 text-white font-bold rounded-2xl shadow-lg transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                            保存修改
+                        </button>
+                    </div>
                 </div>
             </Modal>
 
