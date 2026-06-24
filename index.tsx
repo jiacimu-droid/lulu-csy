@@ -16,8 +16,6 @@ import {
 installCollectionWallDebugConsoleCapture();
 
 // ── Production Log Suppression ──────────────────────────────────
-// 生产环境下隐藏 console.log / console.warn，只保留 console.error
-// 开发时 (vite dev) 不受影响，所有日志正常输出
 if (!import.meta.env.DEV) {
   const keepCollectionWallDebug = (level: 'log' | 'info' | 'warn' | 'debug') => (...args: unknown[]) => {
     captureCollectionWallDebugConsoleArgs(level, args);
@@ -26,22 +24,15 @@ if (!import.meta.env.DEV) {
   console.warn = keepCollectionWallDebug('warn');
   console.debug = keepCollectionWallDebug('debug');
   console.info = keepCollectionWallDebug('info');
-  // console.error 保留 → 用户能看到真正的报错
 }
 
-// Initialize global interceptors BEFORE React mounts
 initSystemInterceptor();
-
-// Initialize app lifecycle manager (handles background → foreground recovery)
 initAppLifecycle();
-
 installIOSStandaloneWorkaround();
 installViewportRepair();
 startRuntimeHealthProbe();
 
-// 预加载本地关键图片（心声水墨画 + 邮戳装饰）
 preloadLocalAssets();
-// 空闲期后台预加载外部资源（朋友圈封面、通知音效等）
 scheduleIdlePreload();
 
 const rootElement = document.getElementById('root');
@@ -55,3 +46,9 @@ root.render(
     <App />
   </React.StrictMode>
 );
+
+// ── Mount Success Signal ──────────────────────────────────
+(window as any).__REACT_MOUNTED = true;
+if (typeof (window as any).__CLEAR_SCRIPT_TIMEOUT === 'function') {
+  (window as any).__CLEAR_SCRIPT_TIMEOUT();
+}
