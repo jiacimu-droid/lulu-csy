@@ -18,8 +18,8 @@
   <meta name="application-name" content="露露" />
 
   <!-- Updated Icons -->
-  <link rel="icon" type="image/webp" href="/icons/icon-96.webp" />
-  <link rel="apple-touch-icon" href="/icons/icon-192.webp" />
+  <link rel="icon" type="image/webp" href="./icons/icon-96.webp" />
+  <link rel="apple-touch-icon" href="./icons/icon-192.webp" />
 
   <!-- Preconnect: 提前建立到外部域名的 TCP/TLS 连接 -->
   <link rel="preconnect" href="https://fonts.loli.net" />
@@ -29,11 +29,54 @@
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
 
   <!-- Preload launch screen icon -->
-  <link rel="preload" as="image" href="/icons/icon-256.webp" />
-  <link rel="preload" as="font" type="font/woff2" href="/fonts/huiwen-splash-poem.woff2" crossorigin />
+  <link rel="preload" as="image" href="./icons/icon-256.webp" />
+  <link rel="preload" as="font" type="font/woff2" href="./fonts/huiwen-splash-poem.woff2" crossorigin />
 
   <!-- Google Fonts -->
   <link href="https://fonts.loli.net/css2?family=Archivo:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Quicksand:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Emergency Error Display (shows before React mounts) -->
+  <style>
+    #emergency-error {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 999999;
+      background: #fdf6f0;
+      padding: 24px;
+      font-family: -apple-system, sans-serif;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #5c4f40;
+      overflow-y: auto;
+    }
+    #emergency-error.active {
+      display: block !important;
+    }
+    #emergency-error h2 {
+      font-size: 16px;
+      color: #c44;
+      margin-bottom: 12px;
+    }
+    #emergency-error pre {
+      background: #fff;
+      border: 1px solid #e8ddd4;
+      border-radius: 8px;
+      padding: 12px;
+      overflow-x: auto;
+      font-size: 11px;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    #emergency-error .tip {
+      background: #e8f5e9;
+      border: 1px solid #a5d6a7;
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 16px;
+      font-size: 12px;
+    }
+  </style>
 
   <!-- Launch Screen Styles (inline for instant render) -->
   <style>
@@ -130,14 +173,91 @@
       40%           { transform: translateY(-12px); opacity: 1; }
     }
   </style>
+
+  <!-- Global Error Catcher (catches errors before React mounts) -->
+  <script>
+    (function() {
+      // Store errors for display
+      window.__BOOT_ERRORS = [];
+      window.__BOOT_LOGS = [];
+
+      function showEmergencyError(title, details) {
+        var el = document.getElementById('emergency-error');
+        if (!el) return;
+        var existing = el.querySelector('pre');
+        if (existing) {
+          existing.textContent += '\n\n[' + new Date().toLocaleTimeString() + '] ' + title + '\n' + details;
+        } else {
+          el.innerHTML = '<h2>启动出错了</h2><pre>' + escapeHtml(title + '\n' + details) + '</pre>' +
+            '<div class="tip">如果刷新后仍有问题，尝试清除浏览器缓存或无痕模式打开</div>';
+        }
+        el.classList.add('active');
+      }
+
+      function escapeHtml(text) {
+        var div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      // Catch global JS errors
+      window.addEventListener('error', function(e) {
+        var msg = e.message + '\n  at ' + (e.filename || '?') + ':' + (e.lineno || '?');
+        window.__BOOT_ERRORS.push(msg);
+        showEmergencyError('JavaScript Error', msg);
+      });
+
+      // Catch unhandled promise rejections
+      window.addEventListener('unhandledrejection', function(e) {
+        var reason = e.reason;
+        var msg = reason && reason.stack ? reason.stack : String(reason);
+        window.__BOOT_ERRORS.push(msg);
+        showEmergencyError('Promise Error', msg);
+      });
+
+      // Clear old service workers that might cache broken builds
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(regs) {
+          regs.forEach(function(reg) {
+            reg.unregister();
+          });
+        }).catch(function() {});
+      }
+
+      // Log all console errors
+      var originalError = console.error;
+      console.error = function() {
+        var args = Array.prototype.slice.call(arguments);
+        window.__BOOT_LOGS.push('[ERROR] ' + args.map(String).join(' '));
+        originalError.apply(console, arguments);
+      };
+
+      // Detect if main script fails to load
+      var scriptTimeout = setTimeout(function() {
+        if (!window.__REACT_MOUNTED) {
+          showEmergencyError('Timeout', '主脚本未能及时加载。可能原因:\n' +
+            '1. 网络连接问题\n' +
+            '2. JS文件路径错误 (GitHub Pages路径问题)\n' +
+            '3. 构建产物不完整');
+        }
+      }, 15000);
+
+      window.__CLEAR_SCRIPT_TIMEOUT = function() {
+        clearTimeout(scriptTimeout);
+      };
+    })();
+  </script>
 </head>
 
 <body>
+  <!-- Emergency Error Display -->
+  <div id="emergency-error"></div>
+
   <div id="root">
     <!-- 启动画面：React 挂载后自动被替换 -->
     <div id="launch-screen">
       <div class="launch-glow"></div>
-      <img class="launch-icon" src="/icons/icon-256.webp" alt="露露" />
+      <img class="launch-icon" src="./icons/icon-256.webp" alt="露露" />
       <div class="launch-title">露露</div>
       <div class="launch-dots">
         <div class="launch-dot"></div>
@@ -146,7 +266,7 @@
       </div>
     </div>
   </div>
-  <script type="module" src="/index.tsx"></script>
+  <script type="module" src="./index.tsx"></script>
 </body>
 
 </html>
