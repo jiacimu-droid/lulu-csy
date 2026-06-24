@@ -1,4 +1,3 @@
-
 export type SocialAuthorType = 'user' | 'character' | 'npc';
 
 export type SocialCommentTone =
@@ -143,7 +142,7 @@ export interface StudyCourse {
     preference?: string;
 }
 
-export type GameTheme = 'fantasy' | 'cyber' | 'horror' | 'modern';
+export type GameTheme = 'fantasy' | 'cyber' | 'horror' | 'modern' | 'apocalypse';
 
 export interface GameActionOption {
     label: string;
