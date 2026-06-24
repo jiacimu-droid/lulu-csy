@@ -36,6 +36,7 @@ import {
   Path,
   GitBranch,
   Timer,
+  CheckCircle,
 } from '@phosphor-icons/react';
 
 // SVG 图标库 - Phosphor Icons
@@ -79,6 +80,7 @@ export const Icons: Record<string, React.FC<{ className?: string }>> = {
   NianNian: ({ className }) => <Sparkle className={className} weight="fill" />,
   CollectionHall: ({ className }) => <Books className={className} weight="fill" />,
   Timer: ({ className }) => <Timer className={className} weight="bold" />,
+  Todo: ({ className }) => <CheckCircle className={className} weight="bold" />,
 };
 
 export const APP_CONFIGS: AppConfig[] = [
@@ -102,6 +104,7 @@ export const APP_CONFIGS: AppConfig[] = [
   { id: AppID.NianNian, name: '念念浮生', icon: 'NianNian', color: 'amber' },
   { id: AppID.CollectionHall, name: '典藏馆', icon: 'CollectionHall', color: 'amber' },
   { id: AppID.Study, name: '番茄钟', icon: 'Timer', color: 'emerald' },
+  { id: AppID.Todo, name: '待办清单', icon: 'Todo', color: 'sky' },
   { id: AppID.Game, name: 'TRPG', icon: 'Game', color: 'orange' },
   { id: AppID.Novel, name: '笔友会', icon: 'Novel', color: 'amber' },
   { id: AppID.Worldbook, name: '世界书', icon: 'Worldbook', color: 'indigo' },
