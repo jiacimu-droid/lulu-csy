@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>露露</title>
+  <script>
+    // SPA fallback: redirect all 404s to index.html
+    // GitHub Pages will serve this file for unknown routes
+    // The app will then handle routing client-side
+    const path = window.location.pathname;
+    const repo = '/lulu-csy';
+    if (path.startsWith(repo)) {
+      sessionStorage.setItem('spa-redirect', path.slice(repo.length) + window.location.search + window.location.hash);
+      window.location.replace(repo + '/');
+    } else {
+      sessionStorage.setItem('spa-redirect', path + window.location.search + window.location.hash);
+      window.location.replace('/');
+    }
+  </script>
+</head>
+<body>
+  <p>Redirecting...</p>
+</body>
+</html>
