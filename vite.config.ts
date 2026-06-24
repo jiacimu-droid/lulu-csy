@@ -31,6 +31,11 @@ function createBuildInfo(): BuildInfo {
 }
 
 function assertRequiredBuildEnv(mode: string, env: Record<string, string>) {
+  // Skip check in GitHub Actions CI (GitHub Pages builds don't need these)
+  if (process.env.GITHUB_ACTIONS === 'true') {
+    return;
+  }
+
   if (!['staging', 'production'].includes(mode)) {
     return;
   }
@@ -218,7 +223,7 @@ export default defineConfig(({ mode, command }) => {
           rewrite: (path) => path.replace(/^\/minimax-api/, ''),
         },
         '/minimax-global-api': {
-          target: 'https://api.minimax.io',
+          target: 'https://api.minimaxi.io',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/minimax-global-api/, ''),
         },
