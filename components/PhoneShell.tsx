@@ -1,8 +1,4 @@
-
-
-
-
-import React,{ memo,useState,useEffect,Component,ErrorInfo,Suspense } from 'react';
+import React, { memo, useState, useEffect, Component, ErrorInfo, Suspense } from 'react';
 import { useOS } from '../context/OSContext';
 import { useVirtualTime } from '../context/VirtualTimeContext';
 import StatusBar from './os/StatusBar';
@@ -11,7 +7,7 @@ import GlobalInputEffect from './os/GlobalInputEffect';
 import Launcher from '../apps/Launcher';
 import { AppID } from '../types';
 import { App as CapApp } from '@capacitor/app';
-import { StatusBar as CapStatusBar,Style as StatusBarStyle } from '@capacitor/status-bar';
+import { StatusBar as CapStatusBar, Style as StatusBarStyle } from '@capacitor/status-bar';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Capacitor } from '@capacitor/core';
 import { requestSystemFullscreen } from '../utils/systemFullscreen';
@@ -35,6 +31,7 @@ const CheckPhone = React.lazy(() => import('../apps/CheckPhone'));
 const StoryPhoneApp = React.lazy(() => import('../apps/StoryPhoneApp'));
 const SocialApp = React.lazy(() => import('../apps/SocialApp'));
 const StudyApp = React.lazy(() => import('../apps/StudyApp'));
+const TodoApp = React.lazy(() => import('../apps/TodoApp'));
 const FAQApp = React.lazy(() => import('../apps/FAQApp'));
 const GameApp = React.lazy(() => import('../apps/GameApp'));
 const WorldbookApp = React.lazy(() => import('../apps/WorldbookApp'));
@@ -72,7 +69,7 @@ import {
 } from '../utils/specialEvents';
 import { haptic } from '../utils/haptics';
 import UpdatePopup from './os/UpdatePopup';
-import { attemptChunkAutoReload,isChunkLoadError,reloadApplication } from '../utils/runtimeRecovery';
+import { attemptChunkAutoReload, isChunkLoadError, reloadApplication } from '../utils/runtimeRecovery';
 import { clearImportRecoveryMarker, readImportRecoveryMarker, type ImportRecoveryMarker } from '../utils/systemBackup';
 
 const DynamicIsland = React.lazy(() => import('./os/DynamicIsland'));
@@ -109,7 +106,6 @@ class AppErrorBoundary extends Component<{ children: React.ReactNode, onCloseApp
     console.error("App Crash:", error, errorInfo);
   }
 
-  // Reset error state when children change (e.g. app switch)
   componentDidUpdate(prevProps: any) {
     if (prevProps.children !== this.props.children) {
       this.setState({ hasError: false, error: null, isChunkError: false, isRecovering: false });
@@ -134,18 +130,14 @@ class AppErrorBoundary extends Component<{ children: React.ReactNode, onCloseApp
             {errorText}
           </p>
           <button
-            onClick={() => {
-              navigator.clipboard?.writeText(errorText).then(() => { }).catch(() => { });
-            }}
+            onClick={() => { navigator.clipboard?.writeText(errorText).then(() => { }).catch(() => { }); }}
             className="px-4 py-2 bg-slate-700 rounded-full text-xs active:scale-95 transition-transform"
           >
             复制错误信息
           </button>
           {this.state.isChunkError && !this.state.isRecovering && (
             <button
-              onClick={() => {
-                reloadApplication('正在刷新应用…');
-              }}
+              onClick={() => { reloadApplication('正在刷新应用…'); }}
               className="px-6 py-3 bg-emerald-500 rounded-full font-bold text-sm shadow-lg active:scale-95 transition-transform"
             >
               刷新应用
@@ -170,19 +162,14 @@ const DisclaimerPopup: React.FC<{ onAccept: () => void }> = ({ onAccept }) => (
   <div className="fixed inset-0 z-[9999] flex items-center justify-center p-5 animate-fade-in">
     <div className="absolute inset-0 bg-black/60 backdrop-blur-md" />
     <div className="relative w-full max-w-sm bg-white/95 backdrop-blur-xl rounded-[2.5rem] shadow-2xl border border-white/30 overflow-hidden animate-slide-up">
-      {/* Header */}
       <div className="pt-7 pb-3 px-6 text-center">
         <div className="text-3xl mb-2">📢</div>
         <h2 className="text-lg font-extrabold text-slate-800">免责声明</h2>
         <p className="text-[11px] text-slate-400 mt-1">Disclaimer · 手抓糯米机 (SullyOS)</p>
       </div>
-
-      {/* Content */}
       <div className="px-6 pb-4 max-h-[55vh] overflow-y-auto no-scrollbar space-y-3">
         <p className="text-[13px] text-slate-600 leading-relaxed">
-          本项目“手抓糯米机 (SullyOS)”是一款
-          <strong className="text-slate-800"> 完全开源、免费 </strong>
-          的软件，仅供个人学习、研究与技术交流使用。
+          本项目"手抓糯米机 (SullyOS)"是一款<strong className="text-slate-800"> 完全开源、免费 </strong>的软件，仅供个人学习、研究与技术交流使用。
         </p>
         <ul className="text-[12px] text-slate-500 leading-relaxed space-y-1.5 list-none">
           <li className="flex gap-2"><span className="shrink-0">-</span><span>本软件不提供任何明示或暗示的担保，作者不对使用本软件产生的任何后果承担责任。</span></li>
@@ -190,8 +177,6 @@ const DisclaimerPopup: React.FC<{ onAccept: () => void }> = ({ onAccept }) => (
           <li className="flex gap-2"><span className="shrink-0">-</span><span>本软件生成的任何 AI 内容均不代表作者立场，用户需要自行判断内容的准确性与合规性。</span></li>
           <li className="flex gap-2"><span className="shrink-0">-</span><span>禁止将本软件用于任何违反当地法律法规的用途。</span></li>
         </ul>
-
-        {/* Highlighted warning */}
         <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-4 mt-3">
           <p className="text-[13px] font-bold text-red-600 text-center leading-relaxed">
             注意：本程序完全免费！<br />
@@ -200,8 +185,6 @@ const DisclaimerPopup: React.FC<{ onAccept: () => void }> = ({ onAccept }) => (
           </p>
         </div>
       </div>
-
-      {/* Footer */}
       <div className="px-6 pb-7 pt-2">
         <button
           onClick={onAccept}
@@ -251,20 +234,17 @@ const ImportRecoveryPopup: React.FC<{
           <h2 className="text-lg font-extrabold text-slate-800">{hasError ? '上次导入失败了' : '上次导入被中断了'}</h2>
           <p className="text-[11px] text-slate-400 mt-1">{hasError ? '错误信息已记录在本机' : '数据可能只恢复了一部分'}</p>
         </div>
-
         <div className="px-6 pb-4 space-y-3 max-h-[58vh] overflow-y-auto no-scrollbar">
           <p className="text-[13px] text-slate-600 leading-relaxed">
             {hasError
               ? '系统检测到上一次导入过程中发生了错误。建议重新导入同一个备份文件，避免数据处在半恢复状态。'
               : '系统检测到上一次导入没有走到完成步骤，可能是浏览器或系统在导入过程中强制重启了。建议重新导入同一个备份文件。'}
           </p>
-
           {hasError && (
             <div className="bg-red-50 border border-red-200 rounded-2xl p-3 text-[12px] text-red-700 leading-relaxed whitespace-pre-wrap break-words select-text">
               {marker.error}
             </div>
           )}
-
           <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 text-[12px] text-amber-700 leading-relaxed">
             <div>阶段：{getImportPhaseLabel(marker.phase)}</div>
             {marker.current && <div>进度：{marker.current}</div>}
@@ -282,22 +262,9 @@ const ImportRecoveryPopup: React.FC<{
             {marker.source && <div className="break-all">文件：{marker.source}{sourceSize ? ` · ${sourceSize}` : ''}</div>}
           </div>
         </div>
-
         <div className="px-6 pb-7 pt-2 grid grid-cols-2 gap-3">
-          <button
-            type="button"
-            onClick={onDismiss}
-            className="py-3 bg-slate-100 text-slate-600 font-bold rounded-2xl active:scale-95 transition-transform text-sm"
-          >
-            知道了
-          </button>
-          <button
-            type="button"
-            onClick={onReimport}
-            className="py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold rounded-2xl shadow-lg shadow-emerald-200 active:scale-95 transition-transform text-sm"
-          >
-            去重新导入
-          </button>
+          <button type="button" onClick={onDismiss} className="py-3 bg-slate-100 text-slate-600 font-bold rounded-2xl active:scale-95 transition-transform text-sm">知道了</button>
+          <button type="button" onClick={onReimport} className="py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold rounded-2xl shadow-lg shadow-emerald-200 active:scale-95 transition-transform text-sm">去重新导入</button>
         </div>
       </div>
     </div>
@@ -313,11 +280,7 @@ interface LockScreenProps {
 }
 
 const LockScreen: React.FC<LockScreenProps> = ({
-  bgImageValue,
-  characters,
-  contentColor,
-  onUnlock,
-  unreadMessages,
+  bgImageValue, characters, contentColor, onUnlock, unreadMessages,
 }) => {
   const virtualTime = useVirtualTime();
   const unreadCount = Object.values(unreadMessages).reduce((a, b) => a + b, 0);
@@ -328,7 +291,6 @@ const LockScreen: React.FC<LockScreenProps> = ({
   const handleUnlock = () => {
     if (isUnlocking) return;
     setIsUnlocking(true);
-
     if ('Notification' in window && Notification.permission !== 'granted') {
       Notification.requestPermission();
     }
@@ -338,25 +300,14 @@ const LockScreen: React.FC<LockScreenProps> = ({
   };
 
   return (
-    <div
-      onClick={handleUnlock}
-      className="relative w-full h-full bg-cover bg-center cursor-pointer overflow-hidden group font-light select-none overscroll-none"
-      style={{ backgroundImage: bgImageValue, color: contentColor }}
-    >
+    <div onClick={handleUnlock} className="relative w-full h-full bg-cover bg-center cursor-pointer overflow-hidden group font-light select-none overscroll-none" style={{ backgroundImage: bgImageValue, color: contentColor }}>
       <div className="absolute inset-0 bg-black/5 backdrop-blur-sm transition-all group-hover:backdrop-blur-none group-hover:bg-transparent duration-700" />
-
       <div className="absolute top-24 w-full text-center drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
         <div className="text-8xl tracking-tighter opacity-95 font-bold">
           {virtualTime.hours.toString().padStart(2, '0')}<span className="animate-pulse">:</span>{virtualTime.minutes.toString().padStart(2, '0')}
         </div>
-        <div
-          className="text-lg tracking-widest opacity-90 mt-2 uppercase text-xs font-bold"
-          data-viewport-debug-trigger="true"
-        >
-          SullyOS Simulation
-        </div>
+        <div className="text-lg tracking-widest opacity-90 mt-2 uppercase text-xs font-bold" data-viewport-debug-trigger="true">SullyOS Simulation</div>
       </div>
-
       {unreadCount > 0 && (
         <div className="absolute top-[40%] left-4 right-4 animate-slide-up">
           <div className="bg-white/20 backdrop-blur-md rounded-2xl p-4 shadow-lg border border-white/10 flex items-center gap-4">
@@ -368,14 +319,11 @@ const LockScreen: React.FC<LockScreenProps> = ({
                 <span>{unreadChar ? unreadChar.name : 'Message'}</span>
                 <span className="text-[10px] opacity-70">刚刚</span>
               </div>
-              <div className="text-xs opacity-90 truncate">
-                {unreadCount > 1 ? `收到 ${unreadCount} 条新消息` : '发来了一条新消息'}
-              </div>
+              <div className="text-xs opacity-90 truncate">{unreadCount > 1 ? `收到 ${unreadCount} 条新消息` : '发来了一条新消息'}</div>
             </div>
           </div>
         </div>
       )}
-
       <div className="absolute bottom-12 w-full flex flex-col items-center gap-3 animate-pulse opacity-80 drop-shadow-md">
         <div className="w-1 h-8 rounded-full bg-gradient-to-b from-transparent to-current"></div>
         <span className="text-[10px] tracking-widest uppercase font-semibold">Tap to Unlock</span>
@@ -402,6 +350,7 @@ function renderActiveApp(activeApp: AppID) {
     case AppID.StoryPhone: return <StoryPhoneApp />;
     case AppID.Social: return <SocialApp />;
     case AppID.Study: return <StudyApp />;
+    case AppID.Todo: return <TodoApp />;
     case AppID.FAQ: return <FAQApp />;
     case AppID.Game: return <GameApp />;
     case AppID.Worldbook: return <WorldbookApp />;
@@ -432,10 +381,7 @@ function renderActiveApp(activeApp: AppID) {
 }
 
 const ActiveAppContainer = memo(function ActiveAppContainer({
-  activeApp,
-  onCloseApp,
-  useIOSStandaloneLayout,
-  topInset,
+  activeApp, onCloseApp, useIOSStandaloneLayout, topInset,
 }: {
   activeApp: AppID;
   onCloseApp: () => void;
@@ -443,14 +389,7 @@ const ActiveAppContainer = memo(function ActiveAppContainer({
   topInset: string | number;
 }) {
   return (
-    <div
-      className="sully-active-app-container flex-1 relative overflow-hidden"
-      data-testid="phone-shell-active-app-container"
-      style={{
-        contain: useIOSStandaloneLayout ? undefined : 'layout style paint',
-        '--active-app-top-inset': typeof topInset === 'number' ? `${topInset}px` : topInset,
-      } as React.CSSProperties}
-    >
+    <div className="sully-active-app-container flex-1 relative overflow-hidden" data-testid="phone-shell-active-app-container" style={{ contain: useIOSStandaloneLayout ? undefined : 'layout style paint', '--active-app-top-inset': typeof topInset === 'number' ? `${topInset}px` : topInset } as React.CSSProperties}>
       <AppErrorBoundary onCloseApp={onCloseApp}>
         <Suspense fallback={<AppSplashScreen appId={activeApp} />}>
           {renderActiveApp(activeApp)}
@@ -470,8 +409,6 @@ const PhoneShell: React.FC = () => {
   const showSimulatedStatusBar = showSystemChrome && !theme.hideStatusBar;
   const showAmbientOverlays = showSystemChrome && showIdleOverlays;
 
-  // Use a ref so that the popstate / backButton handlers always see the latest values
-  // without needing to be re-registered every time state changes.
   const isLockedRef = React.useRef(isLocked);
   React.useEffect(() => { isLockedRef.current = isLocked; }, [isLocked]);
 
@@ -481,23 +418,14 @@ const PhoneShell: React.FC = () => {
   const closeAppRef = React.useRef(closeApp);
   React.useEffect(() => { closeAppRef.current = closeApp; }, [closeApp]);
 
-  const handleCloseActiveApp = React.useCallback(() => {
-    closeAppRef.current();
-  }, []);
+  const handleCloseActiveApp = React.useCallback(() => { closeAppRef.current(); }, []);
 
-  // Disclaimer popup for first-time users
   const [showDisclaimer, setShowDisclaimer] = useState(() => {
-    try {
-      return !localStorage.getItem(DISCLAIMER_KEY);
-    } catch {
-      return true;
-    }
+    try { return !localStorage.getItem(DISCLAIMER_KEY); } catch { return true; }
   });
 
   const handleAcceptDisclaimer = () => {
-    try {
-      localStorage.setItem(DISCLAIMER_KEY, Date.now().toString());
-    } catch { /* ignore */ }
+    try { localStorage.setItem(DISCLAIMER_KEY, Date.now().toString()); } catch { /* ignore */ }
     setShowDisclaimer(false);
   };
 
@@ -505,69 +433,39 @@ const PhoneShell: React.FC = () => {
     try {
       if (!localStorage.getItem(DISCLAIMER_KEY)) return null;
       return readImportRecoveryMarker();
-    } catch {
-      return null;
-    }
+    } catch { return null; }
   });
 
-  useEffect(() => {
-    if (showDisclaimer) return;
-    setImportRecoveryMarker(readImportRecoveryMarker());
-  }, [showDisclaimer]);
+  useEffect(() => { if (showDisclaimer) return; setImportRecoveryMarker(readImportRecoveryMarker()); }, [showDisclaimer]);
 
   const showImportRecoveryPrompt = !showDisclaimer && !!importRecoveryMarker;
 
-  const handleDismissImportRecovery = React.useCallback(() => {
-    clearImportRecoveryMarker();
-    setImportRecoveryMarker(null);
-  }, []);
+  const handleDismissImportRecovery = React.useCallback(() => { clearImportRecoveryMarker(); setImportRecoveryMarker(null); }, []);
 
-  const handleReimportFromRecovery = React.useCallback(() => {
-    clearImportRecoveryMarker();
-    setImportRecoveryMarker(null);
-    openApp(AppID.Settings);
-  }, [openApp]);
+  const handleReimportFromRecovery = React.useCallback(() => { clearImportRecoveryMarker(); setImportRecoveryMarker(null); openApp(AppID.Settings); }, [openApp]);
 
-  // Special-event popup state. Valentine currently uses the shared event helper.
   const [showValentine, setShowValentine] = useState(() => {
-    try {
-      // Only show after disclaimer is accepted
-      return !!(localStorage.getItem(DISCLAIMER_KEY)) && shouldShowActiveSpecialEventPopup();
-    } catch { return false; }
+    try { return !!(localStorage.getItem(DISCLAIMER_KEY)) && shouldShowActiveSpecialEventPopup(); } catch { return false; }
   });
 
-  // Re-check the special-event popup after the disclaimer is accepted.
   useEffect(() => {
     if (!showDisclaimer && !showValentine) {
-      if (shouldShowActiveSpecialEventPopup()) {
-        setShowValentine(true);
-      }
+      if (shouldShowActiveSpecialEventPopup()) { setShowValentine(true); }
     }
   }, [showDisclaimer]);
 
-  // Capacitor: native status bar and notification permissions
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
     const init = async () => {
       const platform = Capacitor.getPlatform();
       try {
         await CapStatusBar.setStyle({ style: StatusBarStyle.Dark });
-
         if (platform === 'android') {
           await CapStatusBar.setOverlaysWebView({ overlay: true });
-          try {
-            await CapStatusBar.setBackgroundColor({ color: '#00000000' });
-          } catch {
-            // Android 15+ can ignore status bar color APIs when edge-to-edge is enforced.
-          }
+          try { await CapStatusBar.setBackgroundColor({ color: '#00000000' }); } catch { /* Android 15+ */ }
           await CapStatusBar.hide();
-        } else {
-          await CapStatusBar.hide();
-        }
-      } catch (e) {
-        console.error('Native status bar init failed', e);
-      }
-
+        } else { await CapStatusBar.hide(); }
+      } catch (e) { console.error('Native status bar init failed', e); }
       try {
         const permStatus = await LocalNotifications.checkPermissions();
         if (permStatus.display !== 'granted') await LocalNotifications.requestPermissions();
@@ -576,111 +474,54 @@ const PhoneShell: React.FC = () => {
     init();
   }, []);
 
-  // Capacitor: Android hardware back button
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
     const setup = async () => {
       try {
         await CapApp.removeAllListeners();
         CapApp.addListener('backButton', () => {
-          if (isLockedRef.current) {
-            // On lock screen, back button exits the app (standard Android behaviour)
-            CapApp.exitApp();
-            return;
-          }
+          if (isLockedRef.current) { CapApp.exitApp(); return; }
           const handled = handleBackRef.current();
-          if (!handled) {
-            // Already at the launcher root, so exit the app.
-            CapApp.exitApp();
-          }
+          if (!handled) { CapApp.exitApp(); }
         });
       } catch (e) { console.log('Back button listener setup failed'); }
     };
     setup();
     return () => { CapApp.removeAllListeners().catch(() => { }); };
-  }, []); // Stable: always reads latest values via refs
+  }, []);
 
-  // Web/PWA: trap browser back navigation inside the app shell
-  // Injects a dummy history entry so that the browser's back gesture fires
-  // a popstate event instead of navigating away from the page.
   useEffect(() => {
-    if (Capacitor.isNativePlatform()) return; // Only for web/PWA
-
-    // Push the initial dummy state so we're always one step ahead
+    if (Capacitor.isNativePlatform()) return;
     history.pushState({ sullyos: true }, '');
-
-    let handling = false; // Simple re-entry guard
-
+    let handling = false;
     const onPopState = () => {
       if (handling) return;
       handling = true;
-
-      if (isLockedRef.current) {
-        // Lock screen: allow normal browser back (don't re-push)
-        handling = false;
-        return;
-      }
-
+      if (isLockedRef.current) { handling = false; return; }
       const handled = handleBackRef.current();
-
-      if (handled) {
-        // Action was taken, so keep the trap active.
-        requestAnimationFrame(() => {
-          history.pushState({ sullyos: true }, '');
-          handling = false;
-        });
-      } else {
-        // Already at root, so release the trap and let the next back exit normally.
-        handling = false;
-      }
+      if (handled) { requestAnimationFrame(() => { history.pushState({ sullyos: true }, ''); handling = false; }); } else { handling = false; }
     };
-
     window.addEventListener('popstate', onPopState);
-    return () => {
-      window.removeEventListener('popstate', onPopState);
-    };
-  }, []); // Stable: always reads latest values via refs
+    return () => { window.removeEventListener('popstate', onPopState); };
+  }, []);
 
-  // Force scroll to top when app changes to prevent "push up" glitches on iOS
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [activeApp]);
+  useEffect(() => { window.scrollTo(0, 0); }, [activeApp]);
 
   useEffect(() => {
-    if (isLocked || isNestedPhoneApp) {
-      setShowIdleOverlays(false);
-      return;
-    }
-
+    if (isLocked || isNestedPhoneApp) { setShowIdleOverlays(false); return; }
     const overlayDelayMs = isLite ? 2500 : 350;
     let idleId: number | undefined;
     const timerId = window.setTimeout(() => {
-      const rIC = window.requestIdleCallback || ((cb: IdleRequestCallback) => window.setTimeout(() => cb({
-        didTimeout: false,
-        timeRemaining: () => 0,
-      }), 1));
+      const rIC = window.requestIdleCallback || ((cb: IdleRequestCallback) => window.setTimeout(() => cb({ didTimeout: false, timeRemaining: () => 0 }), 1));
       idleId = rIC(() => setShowIdleOverlays(true), { timeout: isLite ? 2500 : 1000 });
     }, overlayDelayMs);
-
-    return () => {
-      window.clearTimeout(timerId);
-      if (idleId !== undefined) {
-        const cIC = window.cancelIdleCallback || window.clearTimeout;
-        cIC(idleId);
-      }
-    };
+    return () => { window.clearTimeout(timerId); if (idleId !== undefined) { const cIC = window.cancelIdleCallback || window.clearTimeout; cIC(idleId); } };
   }, [isLocked, isLite, isNestedPhoneApp]);
 
   useEffect(() => {
     if (typeof document === 'undefined') return;
-
     const wallpaper = theme.wallpaper;
-    const backgroundValue = !wallpaper
-      ? '#0f1115'
-      : (wallpaper.startsWith('http') || wallpaper.startsWith('data:') || wallpaper.startsWith('blob:'))
-        ? `url(${wallpaper})`
-        : wallpaper;
-
+    const backgroundValue = !wallpaper ? '#0f1115' : (wallpaper.startsWith('http') || wallpaper.startsWith('data:') || wallpaper.startsWith('blob:')) ? `url(${wallpaper})` : wallpaper;
     [document.documentElement, document.body, document.getElementById('root')].forEach(element => {
       if (!element) return;
       element.style.background = backgroundValue;
@@ -691,20 +532,11 @@ const PhoneShell: React.FC = () => {
     });
   }, [theme.wallpaper]);
 
-  // Idle prefetch: warm the Zhaixinglou chunk and critical assets after unlock
-  // This runs once when the user enters the Launcher, so the chunk is already
-  // in browser cache by the time they tap the Zhaixinglou icon.
-  // NOTE: Safari/iOS does not support requestIdleCallback, so use setTimeout as a fallback.
   useEffect(() => {
     if (isLocked || isLite) return;
     const rIC = window.requestIdleCallback || ((cb: () => void) => window.setTimeout(cb, 1));
     const cIC = window.cancelIdleCallback || window.clearTimeout;
-    const id = rIC(() => {
-      // Prefetch the ZhaixinglouApp JS chunk (download only, no mount)
-      import('../apps/zhaixinglou/ZhaixinglouApp');
-      // Prefetch critical first-screen assets (card back image + fonts)
-      import('../apps/zhaixinglou/AssetPreloader').then(m => m.prefetchZhaixinglouAssets());
-    }, { timeout: 4000 });
+    const id = rIC(() => { import('../apps/zhaixinglou/ZhaixinglouApp'); import('../apps/zhaixinglou/AssetPreloader').then(m => m.prefetchZhaixinglouAssets()); }, { timeout: 4000 });
     return () => cIC(id);
   }, [isLocked, isLite]);
 
@@ -720,118 +552,32 @@ const PhoneShell: React.FC = () => {
   const bgImageValue = getBgStyle(theme.wallpaper);
   const contentColor = theme.contentColor || '#ffffff';
   const safeTop = 'var(--safe-top, env(safe-area-inset-top, 0px))';
-  const activeAppTopInset = activeApp === AppID.Launcher
-    ? 0
-    : `max(${safeTop}, 2.75rem)`;
-  const shellHandlesSafeArea = ![
-    AppID.Launcher,
-    AppID.Chat,
-    AppID.GroupChat,
-    AppID.Settings,
-    AppID.Music,
-  ].includes(activeApp);
+  const activeAppTopInset = activeApp === AppID.Launcher ? 0 : `max(${safeTop}, 2.75rem)`;
+  const shellHandlesSafeArea = ![AppID.Launcher, AppID.Chat, AppID.GroupChat, AppID.Settings, AppID.Music].includes(activeApp);
   const appViewportStyle: React.CSSProperties = useIOSStandaloneLayout
-    ? shellHandlesSafeArea
-      ? {
-          bottom: 0,
-          paddingTop: 'var(--safe-top, env(safe-area-inset-top, 0px))',
-          paddingBottom: 'var(--safe-bottom, env(safe-area-inset-bottom, 0px))',
-          boxSizing: 'border-box',
-        }
-      : {
-          bottom: 0,
-          paddingTop: 0,
-          paddingBottom: 0,
-          boxSizing: 'border-box',
-        }
-    : {
-        paddingTop: 0,
-        paddingBottom: 0,
-        boxSizing: 'border-box',
-      };
+    ? (shellHandlesSafeArea ? { bottom: 0, paddingTop: 'var(--safe-top, env(safe-area-inset-top, 0px))', paddingBottom: 'var(--safe-bottom, env(safe-area-inset-bottom, 0px))', boxSizing: 'border-box' } : { bottom: 0, paddingTop: 0, paddingBottom: 0, boxSizing: 'border-box' })
+    : { paddingTop: 0, paddingBottom: 0, boxSizing: 'border-box' };
 
   if (isLocked) {
-    return (
-      <LockScreen
-        bgImageValue={bgImageValue}
-        characters={characters}
-        contentColor={contentColor}
-        onUnlock={unlock}
-        unreadMessages={unreadMessages}
-      />
-    );
+    return <LockScreen bgImageValue={bgImageValue} characters={characters} contentColor={contentColor} onUnlock={unlock} unreadMessages={unreadMessages} />;
   }
 
   return (
-    <div
-      className="sully-system-text-scope relative w-full h-full overflow-hidden bg-gradient-to-br from-pink-200 via-purple-200 to-indigo-200 text-slate-900 font-sans select-none overscroll-none"
-      data-testid="phone-shell-root"
-      data-performance-mode={isLite ? 'lite' : 'full'}
-      data-system-chrome={showSystemChrome ? 'visible' : 'hidden'}
-    >
-      {/* Optimized Background Layer */}
-      <div
-        data-testid="phone-shell-background"
-        className={`absolute inset-0 bg-cover bg-center transition-all ${isLite ? 'duration-200' : 'duration-700'} ease-[cubic-bezier(0.25,0.1,0.25,1)]`}
-        style={{
-          backgroundImage: bgImageValue,
-          transform: 'scale(1)',
-          filter: activeApp !== AppID.Launcher && !isLite ? 'blur(10px)' : 'none',
-          opacity: activeApp !== AppID.Launcher ? (isLite ? 0.72 : 0.6) : 1,
-          backfaceVisibility: 'hidden',
-          contain: useIOSStandaloneLayout ? undefined : 'strict'
-        }}
-      />
-
+    <div className="sully-system-text-scope relative w-full h-full overflow-hidden bg-gradient-to-br from-pink-200 via-purple-200 to-indigo-200 text-slate-900 font-sans select-none overscroll-none" data-testid="phone-shell-root" data-performance-mode={isLite ? 'lite' : 'full'} data-system-chrome={showSystemChrome ? 'visible' : 'hidden'}>
+      <div className={`absolute inset-0 bg-cover bg-center transition-all ${isLite ? 'duration-200' : 'duration-700'} ease-[cubic-bezier(0.25,0.1,0.25,1)]`} style={{ backgroundImage: bgImageValue, transform: 'scale(1)', filter: activeApp !== AppID.Launcher && !isLite ? 'blur(10px)' : 'none', opacity: activeApp !== AppID.Launcher ? (isLite ? 0.72 : 0.6) : 1, backfaceVisibility: 'hidden', contain: useIOSStandaloneLayout ? undefined : 'strict' }} />
       <div className={`absolute inset-0 transition-all ${isLite ? 'duration-200' : 'duration-500'} ${activeApp === AppID.Launcher ? 'bg-transparent' : isLite ? 'bg-white/45' : 'bg-white/50 backdrop-blur-3xl'}`} />
-
-      {/* Full-bleed app viewport. The app root receives the top inset so its own background reaches behind the status area. */}
-      <div
-        className="absolute top-0 left-0 right-0 bottom-0 z-10 w-full overflow-hidden bg-transparent overscroll-none flex flex-col"
-        data-testid="phone-shell-app-viewport"
-        style={appViewportStyle}
-      >
-        <ActiveAppContainer
-          activeApp={activeApp}
-          onCloseApp={handleCloseActiveApp}
-          useIOSStandaloneLayout={useIOSStandaloneLayout}
-          topInset={activeAppTopInset}
-        />
-
-        {/* Overlays: Status Bar (Top) */}
+      <div className="absolute top-0 left-0 right-0 bottom-0 z-10 w-full overflow-hidden bg-transparent overscroll-none flex flex-col" data-testid="phone-shell-app-viewport" style={appViewportStyle}>
+        <ActiveAppContainer activeApp={activeApp} onCloseApp={handleCloseActiveApp} useIOSStandaloneLayout={useIOSStandaloneLayout} topInset={activeAppTopInset} />
         {showSimulatedStatusBar && <StatusBar />}
-
-        {/* Overlays: Dynamic Island (Music mini player) */}
-        {showAmbientOverlays && (
-          <Suspense fallback={null}>
-            <DynamicIsland />
-          </Suspense>
-        )}
-
-        {/* Overlays: Floating Lyrics */}
-        {showAmbientOverlays && (
-          <Suspense fallback={null}>
-            <FloatingLyrics />
-          </Suspense>
-        )}
-
-        {/* Overlays: iOS-Style Banner Notifications */}
+        {showAmbientOverlays && <Suspense fallback={null}><DynamicIsland /></Suspense>}
+        {showAmbientOverlays && <Suspense fallback={null}><FloatingLyrics /></Suspense>}
         <div className="absolute top-0 left-0 w-full flex flex-col items-center gap-2 pointer-events-none z-[60]" style={{ paddingTop: 'max(12px, calc(var(--safe-top, env(safe-area-inset-top)) + 4px))' }}>
           {toasts.map(toast => (
             <div key={toast.id} className="animate-notif-in w-[92%] max-w-md bg-white/90 backdrop-blur-2xl rounded-[20px] shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-white/40 overflow-hidden pointer-events-auto">
               <div className="px-4 py-3 flex items-start gap-3">
-                {/* App Icon indicator */}
-                <div className={`w-8 h-8 rounded-[8px] shrink-0 flex items-center justify-center shadow-sm mt-0.5 ${toast.type === 'success' ? 'bg-gradient-to-br from-green-400 to-green-500' :
-                  toast.type === 'error' ? 'bg-gradient-to-br from-red-400 to-red-500' :
-                    'bg-gradient-to-br from-indigo-400 to-purple-500'
-                  }`}>
-                  <span className="text-white text-sm font-bold">S</span>
-                </div>
+                <div className={`w-8 h-8 rounded-[8px] shrink-0 flex items-center justify-center shadow-sm mt-0.5 ${toast.type === 'success' ? 'bg-gradient-to-br from-green-400 to-green-500' : toast.type === 'error' ? 'bg-gradient-to-br from-red-400 to-red-500' : 'bg-gradient-to-br from-indigo-400 to-purple-500'}`}><span className="text-white text-sm font-bold">S</span></div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-0.5">
-                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">SullyOS</span>
-                    <span className="text-[10px] text-slate-400">now</span>
-                  </div>
+                  <div className="flex items-center justify-between mb-0.5"><span className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">SullyOS</span><span className="text-[10px] text-slate-400">now</span></div>
                   <p className="text-[13px] font-semibold text-slate-800 leading-snug line-clamp-2">{toast.message}</p>
                 </div>
               </div>
@@ -839,38 +585,13 @@ const PhoneShell: React.FC = () => {
           ))}
         </div>
       </div>
-
-      <GlobalInputEffect
-        enabled={theme.inputEffectEnabled}
-        asset={theme.inputEffectAsset}
-        scale={theme.inputEffectScale}
-        opacity={theme.inputEffectOpacity}
-        offsetX={theme.inputEffectOffsetX}
-        offsetY={theme.inputEffectOffsetY}
-        duration={theme.inputEffectDuration}
-        spinSpeed={theme.inputEffectSpinSpeed}
-      />
-
-      {/* First-time disclaimer popup */}
+      <GlobalInputEffect enabled={theme.inputEffectEnabled} asset={theme.inputEffectAsset} scale={theme.inputEffectScale} opacity={theme.inputEffectOpacity} offsetX={theme.inputEffectOffsetX} offsetY={theme.inputEffectOffsetY} duration={theme.inputEffectDuration} spinSpeed={theme.inputEffectSpinSpeed} />
       {showDisclaimer && <DisclaimerPopup onAccept={handleAcceptDisclaimer} />}
-
-      {!showDisclaimer && showImportRecoveryPrompt && importRecoveryMarker && (
-        <ImportRecoveryPopup
-          marker={importRecoveryMarker}
-          onDismiss={handleDismissImportRecovery}
-          onReimport={handleReimportFromRecovery}
-        />
-      )}
-
-      {/* Special-event popup */}
+      {!showDisclaimer && showImportRecoveryPrompt && importRecoveryMarker && <ImportRecoveryPopup marker={importRecoveryMarker} onDismiss={handleDismissImportRecovery} onReimport={handleReimportFromRecovery} />}
       {!showDisclaimer && !showImportRecoveryPrompt && showValentine && <Suspense fallback={null}><LazyValentineController onClose={() => setShowValentine(false)} /></Suspense>}
-
-      {/* Update Changelog Popup */}
       <UpdatePopup canShow={!showDisclaimer && !showImportRecoveryPrompt && !showValentine} />
     </div>
   );
 };
 
 export default PhoneShell;
-
-
