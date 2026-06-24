@@ -74,7 +74,6 @@ const TodoApp: React.FC = () => {
   // ── CRUD ──
   const addTodo = () => {
     if (!todoContent.trim()) { addToast('请输入待办内容', 'error'); return; }
-    if (selectedCharIds.length === 0) { addToast('请选择至少一个督促角色', 'error'); return; }
 
     const newTodo: TodoItem = {
       id: `todo-${Date.now()}`,
@@ -145,19 +144,24 @@ const TodoApp: React.FC = () => {
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-slate-600"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
           </button>
           <span className="font-bold text-slate-800 text-lg tracking-wide">待办清单</span>
-          <div className="flex gap-1">
+          <div className="flex gap-2 items-center">
             {/* Study reminder toggle */}
             <button
               onClick={() => setShowStudyReminderModal(true)}
-              className={`p-2 -mr-1 rounded-full transition-transform active:scale-90 ${studyReminderEnabled ? 'text-amber-500 bg-amber-50' : 'text-slate-400 hover:bg-black/5'}`}
+              className={`p-2 rounded-full transition-transform active:scale-90 ${studyReminderEnabled ? 'text-amber-500 bg-amber-50' : 'text-slate-400 hover:bg-black/5'}`}
               title="督促学习"
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 1 15.482 0M12 3v18" />
               </svg>
             </button>
-            <button onClick={() => setShowAddModal(true)} className="p-2 -mr-2 rounded-full hover:bg-black/5 active:scale-90 transition-transform text-slate-600">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+            <button 
+              onClick={() => setShowAddModal(true)} 
+              className="p-2 rounded-full hover:bg-black/5 active:scale-90 transition-transform text-slate-600"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
             </button>
           </div>
         </div>
@@ -254,160 +258,159 @@ const TodoApp: React.FC = () => {
       </div>
 
       {/* ── Add Todo Modal ── */}
-      {showAddModal && (
-        <Modal title="添加待办" onClose={() => setShowAddModal(false)} footer={null}>
-          <div className="space-y-4">
-            {/* Content Input */}
-            <div>
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">待办内容</label>
-              <input
-                type="text"
-                value={todoContent}
-                onChange={e => setTodoContent(e.target.value)}
-                placeholder="例如：背单词、写论文..."
-                className="w-full bg-slate-100 rounded-xl p-3 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-amber-400/50"
-                autoFocus
-              />
-            </div>
+      <Modal title="添加待办" isOpen={showAddModal} onClose={() => setShowAddModal(false)} footer={null}>
+        <div className="space-y-4">
+          {/* Content Input */}
+          <div>
+            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">待办内容</label>
+            <input
+              type="text"
+              value={todoContent}
+              onChange={e => setTodoContent(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') addTodo(); }}
+              placeholder="例如：背单词、写论文..."
+              className="w-full bg-slate-100 rounded-xl p-3 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-amber-400/50"
+              autoFocus
+            />
+          </div>
 
-            {/* Frequency */}
-            <div>
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">频率</label>
-              <div className="grid grid-cols-3 gap-2">
-                {(['once', 'daily', 'weekly'] as const).map((value) => {
-                  const labels = { once: '一次性', daily: '每天', weekly: '每周' };
-                  return (
-                    <button
-                      key={value}
-                      onClick={() => setSelectedFreq(value)}
-                      className={`py-2.5 rounded-xl text-xs font-bold transition-all ${
-                        selectedFreq === value
-                          ? 'bg-gradient-to-br from-amber-400 to-orange-400 text-white shadow-md'
-                          : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                      }`}
-                    >
-                      {labels[value]}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Character Selection */}
-            <div>
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">督促角色</label>
-              <div className="flex gap-2 flex-wrap">
-                {characters.map(char => (
+          {/* Frequency */}
+          <div>
+            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">频率</label>
+            <div className="grid grid-cols-3 gap-2">
+              {(['once', 'daily', 'weekly'] as const).map((value) => {
+                const labels = { once: '一次性', daily: '每天', weekly: '每周' };
+                return (
                   <button
-                    key={char.id}
-                    onClick={() => {
-                      setSelectedCharIds(prev =>
-                        prev.includes(char.id) ? prev.filter(id => id !== char.id) : [...prev, char.id]
-                      );
-                    }}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all ${
-                      selectedCharIds.includes(char.id)
-                        ? 'bg-amber-100 text-amber-700 ring-2 ring-amber-400'
+                    key={value}
+                    onClick={() => setSelectedFreq(value)}
+                    className={`py-2.5 rounded-xl text-xs font-bold transition-all ${
+                      selectedFreq === value
+                        ? 'bg-gradient-to-br from-amber-400 to-orange-400 text-white shadow-md'
                         : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                     }`}
                   >
-                    <img src={char.avatar} alt="" className="w-4 h-4 rounded-full" />
-                    {char.name}
+                    {labels[value]}
                   </button>
-                ))}
-              </div>
+                );
+              })}
             </div>
-
-            {/* Submit */}
-            <button
-              onClick={addTodo}
-              disabled={!todoContent.trim() || selectedCharIds.length === 0}
-              className="w-full py-3.5 bg-gradient-to-r from-amber-400 to-orange-400 text-white font-bold text-sm rounded-2xl shadow-lg shadow-orange-200 active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              添加待办 ✦
-            </button>
           </div>
-        </Modal>
-      )}
+
+          {/* Character Selection (optional) */}
+          <div>
+            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">
+              督促角色 <span className="text-slate-300 font-normal">(可选)</span>
+            </label>
+            <div className="flex gap-2 flex-wrap">
+              {characters.map(char => (
+                <button
+                  key={char.id}
+                  onClick={() => {
+                    setSelectedCharIds(prev =>
+                      prev.includes(char.id) ? prev.filter(id => id !== char.id) : [...prev, char.id]
+                    );
+                  }}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all ${
+                    selectedCharIds.includes(char.id)
+                      ? 'bg-amber-100 text-amber-700 ring-2 ring-amber-400'
+                      : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                  }`}
+                >
+                  <img src={char.avatar} alt="" className="w-4 h-4 rounded-full" />
+                  {char.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Submit */}
+          <button
+            onClick={addTodo}
+            disabled={!todoContent.trim()}
+            className="w-full py-3.5 bg-gradient-to-r from-amber-400 to-orange-400 text-white font-bold text-sm rounded-2xl shadow-lg shadow-orange-200 active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            添加待办
+          </button>
+        </div>
+      </Modal>
 
       {/* ── Study Reminder Modal ── */}
-      {showStudyReminderModal && (
-        <Modal title="督促学习" onClose={() => setShowStudyReminderModal(false)} footer={null}>
-          <div className="space-y-4">
-            {/* Enable Toggle */}
-            <div className="flex items-center justify-between bg-white rounded-2xl border border-slate-200 p-4">
-              <div>
-                <p className="text-sm font-bold text-slate-800">开启督促学习</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">长时间未学习时，角色会主动提醒你</p>
-              </div>
-              <button
-                onClick={toggleStudyReminder}
-                className={`w-12 h-7 rounded-full transition-all relative ${studyReminderEnabled ? 'bg-amber-400' : 'bg-slate-200'}`}
-              >
-                <div className={`w-5 h-5 rounded-full bg-white shadow-sm absolute top-1 transition-all ${studyReminderEnabled ? 'left-6' : 'left-1'}`} />
-              </button>
+      <Modal title="督促学习" isOpen={showStudyReminderModal} onClose={() => setShowStudyReminderModal(false)} footer={null}>
+        <div className="space-y-4">
+          {/* Enable Toggle */}
+          <div className="flex items-center justify-between bg-white rounded-2xl border border-slate-200 p-4">
+            <div>
+              <p className="text-sm font-bold text-slate-800">开启督促学习</p>
+              <p className="text-[11px] text-slate-400 mt-0.5">长时间未学习时，角色会主动提醒你</p>
             </div>
-
-            {studyReminderEnabled && (
-              <>
-                {/* Threshold */}
-                <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">
-                    未学习提醒阈值（分钟）
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="range"
-                      min="30"
-                      max="300"
-                      step="10"
-                      value={studyReminderThreshold}
-                      onChange={e => setStudyReminderThreshold(parseInt(e.target.value))}
-                      className="flex-1 accent-amber-400"
-                    />
-                    <span className="text-sm font-bold text-amber-600 w-12 text-right">{studyReminderThreshold}</span>
-                  </div>
-                  <p className="text-[10px] text-slate-400 mt-1">
-                    {studyReminderThreshold < 60 ? '比较严格' : studyReminderThreshold < 120 ? '适中' : '比较宽松'}
-                  </p>
-                </div>
-
-                {/* Character Selection */}
-                <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">督促角色</label>
-                  <div className="flex gap-2 flex-wrap">
-                    {characters.map(char => (
-                      <button
-                        key={char.id}
-                        onClick={() => {
-                          setStudyReminderChars(prev =>
-                            prev.includes(char.id) ? prev.filter(id => id !== char.id) : [...prev, char.id]
-                          );
-                        }}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all ${
-                          studyReminderChars.includes(char.id)
-                            ? 'bg-amber-100 text-amber-700 ring-2 ring-amber-400'
-                            : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                        }`}
-                      >
-                        <img src={char.avatar} alt="" className="w-4 h-4 rounded-full" />
-                        {char.name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <button
-                  onClick={updateStudyReminder}
-                  className="w-full py-3.5 bg-gradient-to-r from-amber-400 to-orange-400 text-white font-bold text-sm rounded-2xl shadow-lg shadow-orange-200 active:scale-[0.98] transition-all"
-                >
-                  保存设置 ✦
-                </button>
-              </>
-            )}
+            <button
+              onClick={toggleStudyReminder}
+              className={`w-12 h-7 rounded-full transition-all relative ${studyReminderEnabled ? 'bg-amber-400' : 'bg-slate-200'}`}
+            >
+              <div className={`w-5 h-5 rounded-full bg-white shadow-sm absolute top-1 transition-all ${studyReminderEnabled ? 'left-6' : 'left-1'}`} />
+            </button>
           </div>
-        </Modal>
-      )}
+
+          {studyReminderEnabled && (
+            <>
+              {/* Threshold */}
+              <div>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">
+                  未学习提醒阈值（分钟）
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min="30"
+                    max="300"
+                    step="10"
+                    value={studyReminderThreshold}
+                    onChange={e => setStudyReminderThreshold(parseInt(e.target.value))}
+                    className="flex-1 accent-amber-400"
+                  />
+                  <span className="text-sm font-bold text-amber-600 w-12 text-right">{studyReminderThreshold}</span>
+                </div>
+                <p className="text-[10px] text-slate-400 mt-1">
+                  {studyReminderThreshold < 60 ? '比较严格' : studyReminderThreshold < 120 ? '适中' : '比较宽松'}
+                </p>
+              </div>
+
+              {/* Character Selection */}
+              <div>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">督促角色</label>
+                <div className="flex gap-2 flex-wrap">
+                  {characters.map(char => (
+                    <button
+                      key={char.id}
+                      onClick={() => {
+                        setStudyReminderChars(prev =>
+                          prev.includes(char.id) ? prev.filter(id => id !== char.id) : [...prev, char.id]
+                        );
+                      }}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all ${
+                        studyReminderChars.includes(char.id)
+                          ? 'bg-amber-100 text-amber-700 ring-2 ring-amber-400'
+                          : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                      }`}
+                    >
+                      <img src={char.avatar} alt="" className="w-4 h-4 rounded-full" />
+                      {char.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <button
+                onClick={updateStudyReminder}
+                className="w-full py-3.5 bg-gradient-to-r from-amber-400 to-orange-400 text-white font-bold text-sm rounded-2xl shadow-lg shadow-orange-200 active:scale-[0.98] transition-all"
+              >
+                保存设置
+              </button>
+            </>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 };
