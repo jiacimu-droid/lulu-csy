@@ -73,7 +73,7 @@ const CircularProgress: React.FC<{
 
 // ─── Main Component ───────────────────────────────────────────────
 const StudyApp: React.FC = () => {
-  const { closeApp, characters, activeCharacterId, apiConfig, addToast, userProfile, ttsConfig } = useOS();
+  const { closeApp, characters, activeCharacterId, apiConfig, addToast, userProfile, ttsConfig, updateCharacter } = useOS();
 
   // ── Navigation ──
   const [mode, setMode] = useState<ViewMode>('setup');
@@ -81,6 +81,8 @@ const StudyApp: React.FC = () => {
   // ── Setup State ──
   const [taskInput, setTaskInput] = useState('');
   const [selectedDuration, setSelectedDuration] = useState(25);
+  const [isCustomTime, setIsCustomTime] = useState(false);
+  const [customMinutes, setCustomMinutes] = useState('30');
   const [selectedChar, setSelectedChar] = useState<CharacterProfile | null>(null);
 
   // ── Running State ──
@@ -156,6 +158,24 @@ const StudyApp: React.FC = () => {
       timerRef.current = null;
     }
   }, []);
+
+  // ── Save to Vector Memory ──
+  const saveToVectorMemory = async (task: string, duration: number, charId: string, charName: string) => {
+    if (!apiConfig.apiKey) return;
+    try {
+      const memoryText = `${charName}陪伴用户完成了番茄钟专注学习，任务是"${task}"，专注时长${duration}分钟。`;
+      const embeddingRes = await fetch(`${apiConfig.baseUrl.replace(/\/$/, '')}/embeddings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiConfig.apiKey}` },
+        body: JSON.stringify({ model: apiConfig.model.includes('bge') ? apiConfig.model : 'text-embedding-3-small', input: memoryText })
+      });
+      const embData = await embeddingRes.json();
+      const embedding = embData.data?.[0]?.embedding;
+      if (embedding) {
+        await DB.saveVectorMemory(charId, memoryText, { source: 'pomodoro', task, duration, charName }, embedding);
+      }
+    } catch (e) { console.warn('Vector memory save failed:', e); }
+  };
 
   // ── AI Image Generation ──
   const generateSceneImage = async (task: string, charName: string) => {
@@ -266,8 +286,9 @@ const StudyApp: React.FC = () => {
   const handleStart = () => {
     if (!taskInput.trim()) { addToast('请输入学习任务', 'error'); return; }
     if (!selectedChar) { addToast('请选择陪伴角色', 'error'); return; }
-
-    const seconds = selectedDuration * 60;
+    const durationMinutes = isCustomTime ? (parseInt(customMinutes) || 25) : selectedDuration;
+    if (durationMinutes < 1 || durationMinutes > 180) { addToast('请输入1-180分钟的时长', 'error'); return; }
+    const seconds = durationMinutes * 60;
     setTotalTime(seconds);
     setTimeLeft(seconds);
     setIsPaused(false);
@@ -279,7 +300,7 @@ const StudyApp: React.FC = () => {
     const session: PomodoroSession = {
       id: `pom-${Date.now()}`,
       task: taskInput.trim(),
-      duration: selectedDuration,
+      duration: durationMinutes,
       charId: selectedChar.id,
       charName: selectedChar.name,
       completed: false,
@@ -287,6 +308,7 @@ const StudyApp: React.FC = () => {
     };
     currentSessionRef.current = session;
     setMode('running');
+    saveToVectorMemory(taskInput.trim(), durationMinutes, selectedChar.id, selectedChar.name);
     startTimer();
     sendChatMessage('我开始学习了！');
     generateSceneImage(taskInput.trim(), selectedChar.name);
@@ -379,13 +401,22 @@ const StudyApp: React.FC = () => {
 
           <section>
             <label className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 block">专注时长</label>
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-5 gap-3">
               {TIME_OPTIONS.map(opt => (
-                <button key={opt.value} onClick={() => setSelectedDuration(opt.value)} className={`py-3 px-2 rounded-2xl text-xs font-bold transition-all ${selectedDuration === opt.value ? 'bg-gradient-to-br from-amber-400 to-orange-400 text-white shadow-lg shadow-orange-200 scale-105' : 'bg-white text-slate-500 border border-slate-200 hover:border-amber-300'}`}>
+                <button key={opt.value} onClick={() => { setSelectedDuration(opt.value); setIsCustomTime(false); }} className={`py-3 px-1 rounded-2xl text-xs font-bold transition-all ${selectedDuration === opt.value && !isCustomTime ? 'bg-gradient-to-br from-amber-400 to-orange-400 text-white shadow-lg shadow-orange-200 scale-105' : 'bg-white text-slate-500 border border-slate-200 hover:border-amber-300'}`}>
                   {opt.label}
                 </button>
               ))}
+              <button onClick={() => setIsCustomTime(true)} className={`py-3 px-1 rounded-2xl text-xs font-bold transition-all ${isCustomTime ? 'bg-gradient-to-br from-amber-400 to-orange-400 text-white shadow-lg shadow-orange-200 scale-105' : 'bg-white text-slate-500 border border-slate-200 hover:border-amber-300'}`}>
+                自定义
+              </button>
             </div>
+            {isCustomTime && (
+              <div className="mt-3 flex items-center gap-3 bg-white rounded-2xl border border-slate-200 p-3 shadow-sm">
+                <input type="number" value={customMinutes} onChange={e => setCustomMinutes(e.target.value)} min="1" max="180" className="w-20 text-center text-sm font-bold text-slate-800 outline-none bg-slate-50 rounded-xl py-2" />
+                <span className="text-xs text-slate-400">分钟</span>
+              </div>
+            )}
           </section>
 
           <section>
@@ -398,10 +429,6 @@ const StudyApp: React.FC = () => {
                 </button>
               ))}
             </div>
-          </section>
-
-          <section className="bg-gradient-to-br from-rose-50 to-orange-50 rounded-2xl p-4 border border-rose-100">
-            <p className="text-[11px] text-slate-500 leading-relaxed">番茄工作法：专注 {selectedDuration} 分钟，然后休息 5 分钟。<br />角色会陪你学习、鼓励你，还可以聊天互动哦～</p>
           </section>
 
           <button onClick={handleStart} disabled={!taskInput.trim() || !selectedChar} className="w-full py-4 bg-gradient-to-r from-amber-400 to-orange-400 text-white font-bold text-sm rounded-2xl shadow-lg shadow-orange-200 active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed">开始学习 ✦</button>
@@ -553,12 +580,12 @@ const StudyApp: React.FC = () => {
         </div>
 
         <h2 className="text-2xl font-bold text-slate-800 mb-2">专注完成！</h2>
-        <p className="text-sm text-slate-500 mb-6 text-center">{selectedChar?.name || '角色'} 陪你完成了 {currentSessionRef.current?.duration || selectedDuration} 分钟的专注学习</p>
+        <p className="text-sm text-slate-500 mb-6 text-center">{selectedChar?.name || '角色'} 陪你完成了 {currentSessionRef.current?.duration || (isCustomTime ? parseInt(customMinutes) || 25 : selectedDuration)} 分钟的专注学习</p>
 
         <div className="w-full bg-white rounded-2xl border border-slate-100 p-5 shadow-sm mb-6">
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center">
-              <p className="text-2xl font-bold text-amber-500">{currentSessionRef.current?.duration || selectedDuration}</p>
+              <p className="text-2xl font-bold text-amber-500">{currentSessionRef.current?.duration || (isCustomTime ? parseInt(customMinutes) || 25 : selectedDuration)}</p>
               <p className="text-[10px] text-slate-400 uppercase tracking-wider">专注分钟</p>
             </div>
             <div className="text-center">
