@@ -35,6 +35,7 @@ import {
   Heartbeat,
   Path,
   GitBranch,
+  Timer,
 } from '@phosphor-icons/react';
 
 // SVG 图标库 - Phosphor Icons
@@ -77,6 +78,7 @@ export const Icons: Record<string, React.FC<{ className?: string }>> = {
   LoveShow: ({ className }) => <Heart className={className} weight="fill" />,
   NianNian: ({ className }) => <Sparkle className={className} weight="fill" />,
   CollectionHall: ({ className }) => <Books className={className} weight="fill" />,
+  Timer: ({ className }) => <Timer className={className} weight="bold" />,
 };
 
 export const APP_CONFIGS: AppConfig[] = [
@@ -99,7 +101,7 @@ export const APP_CONFIGS: AppConfig[] = [
   { id: AppID.LoveShow, name: '心动放送', icon: 'LoveShow', color: 'rose' },
   { id: AppID.NianNian, name: '念念浮生', icon: 'NianNian', color: 'amber' },
   { id: AppID.CollectionHall, name: '典藏馆', icon: 'CollectionHall', color: 'amber' },
-  { id: AppID.Study, name: '自习室', icon: 'Study', color: 'emerald' },
+  { id: AppID.Study, name: '番茄钟', icon: 'Timer', color: 'emerald' },
   { id: AppID.Game, name: 'TRPG', icon: 'Game', color: 'orange' },
   { id: AppID.Novel, name: '笔友会', icon: 'Novel', color: 'amber' },
   { id: AppID.Worldbook, name: '世界书', icon: 'Worldbook', color: 'indigo' },
