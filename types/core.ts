@@ -1,4 +1,3 @@
-
 import type { ChatTheme } from './chat';
 
 export enum AppID {
@@ -21,6 +20,7 @@ export enum AppID {
     StoryPhone = 'story_phone',
     Social = 'social',
     Study = 'study',
+    Todo = 'todo',
     FAQ = 'faq',
     Game = 'game',
     Worldbook = 'worldbook',
